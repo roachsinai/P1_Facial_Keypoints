@@ -3,10 +3,8 @@ from models import AlexNet
 
 import cv2
 import torch
-import numpy as np
 
 from torch.autograd import Variable
-import ipdb
 
 mean_pts = 104.4724870017331
 std_pts = 43.173022717543226

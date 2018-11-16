@@ -12,7 +12,7 @@ input_size = 227
 extra = 60
 
 face_cascade = cv2.CascadeClassifier(
-    '/home/roach/.virtualenvs/nn/lib/python3.7/site-packages/cv2/data/haarcascade_frontalface_default.xml'
+    './detector_architectures/haarcascade_frontalface_default.xml'
 )
 net = AlexNet()
 net.load_state_dict(

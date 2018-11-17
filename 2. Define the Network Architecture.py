@@ -9,45 +9,12 @@ device = torch.device("cuda:0" if use_cuda else "cpu")
 # cudnn.benchmark = True
 
 from models import AlexNet
-
-net = AlexNet()
-net.cuda()
-print(net)
-
-
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-
 from data_load import FacialKeypointsDataset
 from data_load import Rescale, RandomCrop, Normalize, ToTensor
-
-
-train_data_transform = transforms.Compose([Rescale(250),\
-                                           RandomCrop(227),\
-                                           Normalize(),\
-                                           ToTensor()])
-
-
-train_dataset = FacialKeypointsDataset(csv_file='data/training_frames_keypoints.csv',
-                                             root_dir='data/training/',
-                                             transform=train_data_transform)
-
-print('Number of images: ', len(train_dataset))
-
-
-batch_size = 10
-
-train_loader = DataLoader(train_dataset,
-                          batch_size=batch_size,
-                          shuffle=True,
-                          num_workers=4)
-
-
 import torch.optim as optim
 
-criterion = nn.SmoothL1Loss()
-
-optimizer = optim.Adam(net.parameters(), lr=.001, betas=(.9, .999), eps=1e-08)
 
 best_model_epoch = 0
 def train_net(n_epochs):
@@ -56,6 +23,7 @@ def train_net(n_epochs):
     net.train()
     
     minimum_loss = float("inf")
+    best_model_epochs = []
 
     for epoch in range(n_epochs):  # loop over the dataset multiple times
         
@@ -100,13 +68,38 @@ def train_net(n_epochs):
 
         if epoch_loss < minimum_loss:
             minimum_loss = epoch_loss
-            out_path = 'saved_models/keypoints_model.pt'
+            out_path = 'saved_models/{}_keypoints_model.pt'.format(normalize.norm_method)
             torch.save(net.state_dict(), out_path)
-            # best_model_path = 'saved_models/keypoints_model_epoch{}.pt'.format(epoch + 1)
-            best_model_epoch = epoch + 1
+            best_model_epochs.append(epoch + 1)
+            
 
-    print('Finished Training, {} epoch(start from 1) got the minimum loss.'.format(best_model_epoch))
+    print('\nFinished Training, epochs(start from 1) got the minimum loss:\n    {}'.format(best_model_epochs))
+
+if __name__ == '__main__':
+    net = AlexNet()
+    net.cuda()
+    print(net)
+
+    
+    normalize = Normalize("CENTER", 227)
+    train_data_transform = transforms.Compose([Rescale(250),\
+                                               RandomCrop(227),\
+                                               normalize,\
+                                               ToTensor()])
+    train_dataset = FacialKeypointsDataset(csv_file='data/training_frames_keypoints.csv',
+                                                 root_dir='data/training/',
+                                                 transform=train_data_transform)
+    print('Number of images: ', len(train_dataset))
 
 
-n_epochs = 50 # start small, and increase when you've decided on your model structure and hyperparams
-train_net(n_epochs)
+    batch_size = 10
+    train_loader = DataLoader(train_dataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              num_workers=4)
+
+    criterion = nn.SmoothL1Loss()
+    optimizer = optim.Adam(net.parameters(), lr=.001, betas=(.9, .999), eps=1e-08)
+
+    n_epochs = 50 # start small, and increase when you've decided on your model structure and hyperparams
+    train_net(n_epochs)

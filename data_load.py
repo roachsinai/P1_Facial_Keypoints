@@ -50,18 +50,22 @@ class FacialKeypointsDataset(Dataset):
 # tranforms
 
 class Normalize(object):
-    """Convert a color image to grayscale and normalize the color range to [0,1].
+    """Convert a color image to grayscale, normalize the color range to [0,1], and scaling keypoints.
     
     Args:
-        feat_shape (tuple or int): input feature map size. If int, input feature map 
-            to normalize is square.
-
-        Usually it should be squared, so just implement squared version...
+        norm_method: AutoScaling, Centering. 
+        image_size: size of images, used for Centering.
     """
 
-    def __init__(self):
-        self.mean_pts = 104.4724870017331
-        self.std_pts = 43.173022717543226
+    def __init__(self, norm_method, image_size=None):
+        if norm_method == "AUTO":
+            self.norm_method = "auto_scaling"
+            self.multiplier = 104.4724870017331
+            self.subtrahend = 43.173022717543226
+        elif norm_method == "CENTER":
+            self.norm_method = "center_scaling"
+            self.multiplier = image_size / 2
+            self.subtrahend = self.multiplier
 
     def __call__(self, sample):
         image, key_pts = sample['image'], sample['keypoints']
@@ -80,10 +84,31 @@ class Normalize(object):
         # mean = 100, sqrt = 50, so, pts should be (pts - 100)/50
         # key_pts_copy = (key_pts_copy - 100)/50.0
         # key_pts_copy = (key_pts_copy - self.norm_param) / self.norm_param
-        key_pts_copy = (key_pts_copy - self.mean_pts) / self.std_pts
+        key_pts_copy = (key_pts_copy - self.subtrahend) / self.multiplier
 
 
         return {'image': image_copy, 'keypoints': key_pts_copy}
+
+class DeNormalize(object):
+    """Denormalize keypoints according to norm_method.
+    
+    Args:
+        norm_method: AutoScaling, Centering. 
+        image_size: size of images, used for Centering.
+    """
+
+    def __init__(self, norm_method, image_size=None):
+        if norm_method == "AUTO":
+            self.norm_method = "auto_scaling"
+            self.multiplier = 104.4724870017331
+            self.subtrahend = 43.173022717543226
+        elif norm_method == "CENTER":
+            self.norm_method = "center_scaling"
+            self.multiplier = image_size / 2
+            self.subtrahend = self.multiplier
+
+    def __call__(self, key_pts):
+        return key_pts * self.multiplier + self.subtrahend
 
 
 class Rescale(object):

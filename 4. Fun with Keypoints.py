@@ -5,19 +5,20 @@ import cv2
 import torch
 
 from torch.autograd import Variable
+from data_load import DeNormalize
 
-mean_pts = 104.4724870017331
-std_pts = 43.173022717543226
 input_size = 227
 extra = 60
 
 face_cascade = cv2.CascadeClassifier(
     './detector_architectures/haarcascade_frontalface_default.xml'
 )
+
+denormalize = DeNormalize("CENTER", 227)
 net = AlexNet()
 net.load_state_dict(
     torch.load(
-        'saved_models/keypoints_model.pt',
+        'saved_models/{}_keypoints_model.pt'.format(denormalize.norm_method),
         map_location=lambda storage, loc: storage))
 net.eval()
 
@@ -47,7 +48,7 @@ while True:
 
         output_pts = net.forward(Variable(gray_face))
         output_pts = output_pts.view(68, 2).data.numpy()
-        output_pts = output_pts * std_pts + mean_pts
+        output_pts = denormalize(output_pts)
         output_pts = output_pts * ((w + 2 * extra) / input_size,
                                    (h + 2 * extra) / input_size)
 

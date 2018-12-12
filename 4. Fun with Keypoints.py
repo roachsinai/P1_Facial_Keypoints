@@ -23,7 +23,7 @@ net.load_state_dict(
 net.eval()
 
 sunglasses = cv2.imread('images/sunglasses.png', cv2.IMREAD_UNCHANGED)
-original_sunglasses_width, original_sunglasses_height = sunglasses.shape[:2]
+original_sunglasses_height, original_sunglasses_width = sunglasses.shape[:2]
 
 camera = cv2.VideoCapture(0)
 while True:
@@ -54,8 +54,7 @@ while True:
 
         angle = vec_ang(output_pts[27], output_pts[33])
         sunglasses_rotated = rotate_image(sunglasses, angle)
-        original_sunglasses_rotated_width, orignal_sunglasses_rotated_height = sunglasses_rotated.shape[
-            :2]
+        original_sunglasses_rotated_height, original_sunglasses_rotated_width = sunglasses_rotated.shape[:2]
 
         sunglass_width = int(
             abs((output_pts[17][0] - output_pts[26][0]) * 1.1))
@@ -63,7 +62,7 @@ while True:
             abs((output_pts[27][1] - output_pts[33][1]) / 1.1))
         sunglass_rotated_resized = cv2.resize(
             sunglasses_rotated, (int(sunglass_width * original_sunglasses_rotated_width / original_sunglasses_width),
-                                 int(sunglass_height * orignal_sunglasses_rotated_height / original_sunglasses_height)),
+                                 int(sunglass_height * original_sunglasses_rotated_height / original_sunglasses_height)),
             interpolation=cv2.INTER_CUBIC)
         transparent_region = sunglass_rotated_resized[:, :, :3] != 0
 

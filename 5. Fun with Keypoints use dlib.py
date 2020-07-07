@@ -1,13 +1,9 @@
-from utils import *
-from models import AlexNet
-
 import cv2
 import dlib
 import torch
 
-from torch.autograd import Variable
-from data_load import DeNormalize
 from imutils import face_utils
+from utils import *
 
 face_landmark_path = '/home/roach/.dlib/shape_predictor_68_face_landmarks.dat'
 
@@ -24,7 +20,7 @@ while True:
     if ret:
         face_rects = detector(frame, 0)
         if len(face_rects) == 0:
-            break
+            continue
 
     for face_rect in face_rects:
         output_pts = predictor(frame, face_rect)
